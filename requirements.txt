@@ -1,0 +1,16 @@
+# Backend API dependencies
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+python-multipart==0.0.9
+pandas==2.2.2
+numpy==1.26.4
+openpyxl==3.1.2
+xlrd==2.0.1
+scikit-learn==1.4.2
+joblib==1.4.2
+
+# For reading/writing Excel and CSV files robustly
+xlsxwriter==3.2.0
+
+# For static file serving and docs
+jinja2==3.1.4
