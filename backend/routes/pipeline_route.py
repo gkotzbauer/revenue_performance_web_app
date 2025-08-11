@@ -1,0 +1,49 @@
+# backend/routes/pipeline_route.py
+from fastapi import APIRouter, Query, HTTPException
+from fastapi.responses import JSONResponse
+from typing import Optional, Dict, Any
+import os
+
+from ..utils.pipeline_utils import run_pipeline, LOG_DIR  # provided in utils
+
+router = APIRouter(prefix="/api/pipeline", tags=["pipeline"])
+
+
+@router.post("/run", response_class=JSONResponse)
+async def run_full_pipeline(
+    start_at: Optional[str] = Query(None, description="Optional step label prefix to start from")
+) -> Dict[str, Any]:
+    """
+    Run the revenue performance pipeline end-to-end, or from a specific step.
+    Logs are written to logs/pipeline.log.
+    """
+    env = os.environ.copy()
+    if start_at:
+        env["START_AT"] = start_at
+
+    try:
+        rc = run_pipeline("run_pipeline.py", env_override=env)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Pipeline execution failed: {e}") from e
+
+    return {
+        "status": "ok" if rc == 0 else "error",
+        "return_code": rc,
+        "log_path": str(LOG_DIR / "pipeline.log"),
+    }
+
+
+@router.get("/status", response_class=JSONResponse)
+async def pipeline_status() -> Dict[str, Any]:
+    """
+    Basic placeholder endpoint for pipeline status checks.
+    Can be expanded to track real-time execution in the future.
+    """
+    log_file = LOG_DIR / "pipeline.log"
+    if not log_file.exists():
+        return {"status": "idle", "message": "No pipeline log found."}
+    return {
+        "status": "complete",
+        "log_path": str(log_file),
+        "last_modified": int(log_file.stat().st_mtime),
+    }
