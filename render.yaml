@@ -15,14 +15,15 @@ services:
       - key: PERF_UNDER_PCT
         value: "-0.05"
       - key: CORS_ALLOW_ORIGINS
-        value: "*"            # tighten later if needed
+        value: "*"
     disk:
       name: pipeline-data
       mountPath: /opt/render/project/src/data
       sizeGB: 5
 
-  - type: static
+  - type: web
     name: revenue-performance-frontend
+    env: static
     buildCommand: |
       cd frontend
       npm install
