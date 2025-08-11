@@ -1,37 +1,36 @@
 services:
   - type: web
-    name: revenue-performance-api
+    name: revenue-performance-app
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn -k uvicorn.workers.UvicornWorker backend.app:app --bind 0.0.0.0:$PORT
+    region: oregon
+
+    # Build the frontend, then install backend deps
+    buildCommand: |
+      cd frontend
+      npm ci
+      npm run build
+      cd ..
+      mkdir -p backend/static
+      # copy React build into backend/static
+      cp -R frontend/build/* backend/static/
+      pip install --upgrade pip
+      pip install -r requirements.txt
+
+    startCommand: |
+      gunicorn -w 2 -k uvicorn.workers.UvicornWorker backend.app:app --bind 0.0.0.0:$PORT
+
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.9
+      - key: PYTHONUNBUFFERED
+        value: "1"
       - key: MATERIALITY_PCT
         value: "0.03"
       - key: PERF_OVER_PCT
         value: "0.05"
       - key: PERF_UNDER_PCT
         value: "-0.05"
-      - key: CORS_ALLOW_ORIGINS
-        value: "*"
-    disk:
-      name: pipeline-data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 5
-
-  - type: web
-    name: revenue-performance-frontend
-    env: static
-    buildCommand: |
-      cd frontend
-      npm install
-      npm run build
-    staticPublishPath: frontend/build
-    envVars:
+      # Point frontend at same origin (served by this app)
       - key: REACT_APP_API_BASE
-        fromService:
-          name: revenue-performance-api
-          type: web
-          property: url
+        value: "/api"
+
+    # No disks on free plan; write temp artifacts to /tmp if needed
