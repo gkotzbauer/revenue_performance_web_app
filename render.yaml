@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: revenue-performance-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -k uvicorn.workers.UvicornWorker backend.app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: MATERIALITY_PCT
+        value: "0.03"
+      - key: PERF_OVER_PCT
+        value: "0.05"
+      - key: PERF_UNDER_PCT
+        value: "-0.05"
+      - key: CORS_ALLOW_ORIGINS
+        value: "*"            # tighten later if needed
+    disk:
+      name: pipeline-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 5
+
+  - type: static
+    name: revenue-performance-frontend
+    buildCommand: |
+      cd frontend
+      npm install
+      npm run build
+    staticPublishPath: frontend/build
+    envVars:
+      - key: REACT_APP_API_BASE
+        fromService:
+          name: revenue-performance-api
+          type: web
+          property: url
