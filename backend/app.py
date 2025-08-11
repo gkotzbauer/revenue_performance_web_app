@@ -47,6 +47,11 @@ OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 # Optional: serve outputs so downloads can be direct links
 app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
 
+# Serve the React frontend build
+STATIC_DIR = Path(__file__).parent / "static"
+if STATIC_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
+
 # ---------------------------------------
 # Routers
 # ---------------------------------------

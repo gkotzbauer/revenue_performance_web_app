@@ -4,24 +4,17 @@
   "private": true,
   "description": "Revenue Performance Analytics Web App",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && python app.py",
+    "dev:frontend": "cd frontend && npm start",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && python app.py",
+    "install:all": "npm install && cd frontend && npm install"
   },
   "dependencies": {
-    "axios": "^1.6.7",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "next": "^14.0.0",
-    "tailwindcss": "^3.4.1",
-    "postcss": "^8.4.31",
-    "autoprefixer": "^10.4.16"
+    "concurrently": "^8.2.2"
   },
-  "devDependencies": {
-    "eslint": "^8.54.0",
-    "eslint-config-next": "^14.0.0"
-  },
+  "devDependencies": {},
   "keywords": [
     "revenue",
     "performance",
