@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 from typing import Optional, Dict, Any
 from pathlib import Path
 import os
+import subprocess
+import sys
 
 from ..utils.pipeline_utils import run_pipeline  # provided in utils
 
@@ -12,7 +14,9 @@ router = APIRouter(prefix="/api/pipeline", tags=["pipeline"])
 # Define constants locally since they're not in pipeline_utils
 PIPELINE_ROOT = Path(__file__).resolve().parents[2]  # repo root
 LOG_DIR = PIPELINE_ROOT / "logs"
+OUTPUTS_DIR = PIPELINE_ROOT / "data" / "outputs"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
+OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.post("/run", response_class=JSONResponse)
@@ -28,9 +32,33 @@ async def run_full_pipeline(
         env["START_AT"] = start_at
 
     try:
-        # run_pipeline expects a list of (label, script) tuples
-        scripts = [("Revenue Performance Pipeline", "run_pipeline.py")]
-        rc = run_pipeline(scripts, env_overrides=env)
+        # Run the main pipeline script directly
+        pipeline_script = PIPELINE_ROOT / "run_pipeline.py"
+        if not pipeline_script.exists():
+            raise FileNotFoundError(f"Pipeline script not found: {pipeline_script}")
+        
+        # Set environment variables for the pipeline
+        env["DATA_DIR"] = str(DATA_DIR)
+        env["UPLOADS_DIR"] = str(UPLOADS_DIR)
+        env["OUTPUTS_DIR"] = str(OUTPUTS_DIR)
+        env["LOGS_DIR"] = str(LOG_DIR)
+        
+        # Run the pipeline script
+        result = subprocess.run(
+            [sys.executable, str(pipeline_script)],
+            env=env,
+            cwd=str(PIPELINE_ROOT),
+            capture_output=True,
+            text=True
+        )
+        
+        rc = result.returncode
+        
+        # Log the output for debugging
+        print("Pipeline stdout:", result.stdout)
+        if result.stderr:
+            print("Pipeline stderr:", result.stderr)
+            
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Pipeline execution failed: {e}") from e
 
@@ -38,6 +66,7 @@ async def run_full_pipeline(
         "status": "ok" if rc == 0 else "error",
         "return_code": rc,
         "log_path": str(LOG_DIR / "pipeline.log"),
+        "message": f"Pipeline completed with return code {rc}"
     }
 
 

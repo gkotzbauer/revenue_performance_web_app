@@ -40,7 +40,27 @@ const Upload = () => {
         throw new Error(`Pipeline failed! Status: ${pipelineRes.status}`);
 
       const pipelineData = await pipelineRes.json();
-      setUploadStatus(`✅ Pipeline completed: ${pipelineData.message}`);
+      
+      if (pipelineData.status === "ok") {
+        setUploadStatus(`✅ Pipeline completed successfully! Return code: ${pipelineData.return_code}`);
+        
+        // Check if there are outputs available
+        try {
+          const outputsRes = await fetch("/api/download/list");
+          if (outputsRes.ok) {
+            const outputs = await outputsRes.json();
+            if (outputs.files && outputs.files.length > 0) {
+              setUploadStatus(`✅ Pipeline completed! Generated ${outputs.files.length} output files. Check the Downloads section.`);
+            } else {
+              setUploadStatus(`✅ Pipeline completed! No output files found yet. Check logs for details.`);
+            }
+          }
+        } catch (err) {
+          console.log("Could not check outputs:", err);
+        }
+      } else {
+        setUploadStatus(`❌ Pipeline failed with return code: ${pipelineData.return_code}`);
+      }
     } catch (err) {
       console.error("Upload error:", err);
       setUploadStatus(`❌ Error: ${err.message}`);
