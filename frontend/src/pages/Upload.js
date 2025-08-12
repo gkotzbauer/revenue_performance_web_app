@@ -35,7 +35,7 @@ const Upload = () => {
 
       // Optionally start pipeline
       setUploadStatus("⚙️ Starting pipeline processing...");
-      const pipelineRes = await fetch("/api/run-pipeline", { method: "POST" });
+      const pipelineRes = await fetch("/api/pipeline/run", { method: "POST" });
       if (!pipelineRes.ok)
         throw new Error(`Pipeline failed! Status: ${pipelineRes.status}`);
 
