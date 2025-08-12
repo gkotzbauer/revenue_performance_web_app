@@ -57,23 +57,32 @@ async def run_full_pipeline(
         env["OUTPUTS_DIR"] = str(OUTPUTS_DIR)
         env["LOGS_DIR"] = str(LOG_DIR)
         
-        # Run the pipeline script
-        result = subprocess.run(
-            [sys.executable, str(pipeline_script)],
-            env=env,
-            cwd=str(PIPELINE_ROOT),
-            capture_output=True,
-            text=True
-        )
-        
-        rc = result.returncode
-        
-        # Log the output for debugging
-        print(f"Pipeline completed with return code: {rc}")
-        print("Pipeline stdout:", result.stdout)
-        if result.stderr:
-            print("Pipeline stderr:", result.stderr)
+        # Run the pipeline script with timeout
+        try:
+            result = subprocess.run(
+                [sys.executable, str(pipeline_script)],
+                env=env,
+                cwd=str(PIPELINE_ROOT),
+                capture_output=True,
+                text=True,
+                timeout=300  # 5 minute timeout
+            )
             
+            rc = result.returncode
+            
+            # Log the output for debugging
+            print(f"Pipeline completed with return code: {rc}")
+            print("Pipeline stdout:", result.stdout)
+            if result.stderr:
+                print("Pipeline stderr:", result.stderr)
+                
+        except subprocess.TimeoutExpired:
+            print("❌ Pipeline execution timed out after 5 minutes")
+            raise HTTPException(status_code=500, detail="Pipeline execution timed out after 5 minutes")
+        except Exception as e:
+            print(f"❌ Subprocess execution error: {e}")
+            raise HTTPException(status_code=500, detail=f"Pipeline execution failed: {e}")
+
     except Exception as e:
         print(f"❌ Pipeline execution error: {e}")
         import traceback
