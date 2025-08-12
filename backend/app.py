@@ -51,29 +51,8 @@ app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
 # Serve the React frontend build
 STATIC_DIR = Path(__file__).parent / "static"
 if STATIC_DIR.exists():
-    # Serve static assets from /static path
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-    
-    # Serve index.html at root for SPA routing
-    @app.get("/")
-    async def serve_index():
-        from fastapi.responses import FileResponse
-        return FileResponse(str(STATIC_DIR / "index.html"))
-    
-    # Handle other frontend routes for SPA
-    @app.get("/{full_path:path}")
-    async def serve_spa(full_path: str):
-        # Skip API routes
-        if full_path.startswith("api/"):
-            raise HTTPException(status_code=404, detail="API route not found")
-        
-        # Try to serve the requested file, fallback to index.html for SPA routing
-        file_path = STATIC_DIR / full_path
-        if file_path.exists() and file_path.is_file():
-            return FileResponse(str(file_path))
-        else:
-            # Fallback to index.html for client-side routing
-            return FileResponse(str(STATIC_DIR / "index.html"))
+    # Mount the React app at root - API routes mounted earlier will take precedence
+    app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
 
 # ---------------------------------------
 # Routers
