@@ -106,6 +106,9 @@ def health():
 # Local run
 # ---------------------------------------
 # Run with: uvicorn backend.app:app --reload --port 8000
+# 
+# For production deployment with Gunicorn, use these settings to prevent worker timeouts:
+# gunicorn -w 2 -k uvicorn.workers.UvicornWorker --timeout 600 --keep-alive 5 backend.app:app --bind 0.0.0.0:8000
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("backend.app:app", host="0.0.0.0", port=8000, reload=True)

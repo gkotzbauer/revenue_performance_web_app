@@ -103,25 +103,29 @@ def process_uploaded_files():
                     
                     # Check file size before processing
                     file_size_mb = file_path.stat().st_size / (1024 * 1024)
-                    if file_size_mb > 100:  # 100MB limit
-                        print(f"⚠️ File {file_path.name} is large ({file_size_mb:.2f} MB), processing in chunks...")
+                    print(f"  - File size: {file_size_mb:.2f} MB")
                     
-                    # Read file with chunking for large files
-                    if file_size_mb > 50:
-                        # For large files, just get basic info
-                        if file_path.suffix.lower() == '.csv':
-                            # Read just first few rows to get structure
-                            df_sample = pd.read_csv(file_path, nrows=1000)
-                            total_rows = sum(1 for _ in open(file_path)) - 1  # Count lines minus header
-                        else:
-                            # For Excel, we have to read it all but with memory optimization
-                            df_sample = pd.read_excel(file_path, nrows=1000)
-                            # Estimate total rows (this is approximate)
-                            total_rows = len(df_sample) * 100  # Rough estimate
+                    # For faster processing, use lower thresholds
+                    if file_size_mb > 25:  # Reduced from 50MB
+                        print(f"⚠️ File {file_path.name} is large ({file_size_mb:.2f} MB), creating summary only...")
                         
-                        print(f"  - Sample rows: {len(df_sample)}")
-                        print(f"  - Estimated total rows: {total_rows}")
+                        # For large files, just get basic info quickly
+                        if file_path.suffix.lower() == '.csv':
+                            # Count lines quickly without loading into memory
+                            with open(file_path, 'r') as f:
+                                line_count = sum(1 for _ in f)
+                            
+                            # Read just header for column info
+                            df_sample = pd.read_csv(file_path, nrows=1)
+                            total_rows = line_count - 1  # Subtract header
+                        else:
+                            # For Excel, read just first few rows
+                            df_sample = pd.read_excel(file_path, nrows=5)
+                            # Estimate total rows (this is approximate)
+                            total_rows = len(df_sample) * 200  # Rough estimate
+                        
                         print(f"  - Columns: {len(df_sample.columns)}")
+                        print(f"  - Estimated total rows: {total_rows}")
                         
                         # Create a summary instead of full processing
                         summary_file = OUTPUTS_DIR / f"summary_{file_path.stem}.json"
@@ -129,9 +133,8 @@ def process_uploaded_files():
                             "filename": file_path.name,
                             "file_size_mb": file_size_mb,
                             "columns": list(df_sample.columns),
-                            "sample_rows": len(df_sample),
                             "estimated_total_rows": total_rows,
-                            "note": "Large file - only summary created"
+                            "note": "Large file - summary only for performance"
                         }
                         
                         with open(summary_file, 'w') as f:
@@ -141,6 +144,7 @@ def process_uploaded_files():
                         
                     else:
                         # Process smaller files normally
+                        print(f"  - Processing file completely...")
                         if file_path.suffix.lower() == '.csv':
                             df = pd.read_csv(file_path)
                         else:
@@ -157,7 +161,7 @@ def process_uploaded_files():
                         print(f"  - Rows: {len(df)}")
                         print(f"  - Columns: {len(df.columns)}")
                         
-                        # Clear memory
+                        # Clear memory immediately
                         del df
                         
                 except Exception as e:
