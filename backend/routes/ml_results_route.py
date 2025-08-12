@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 from typing import List, Dict, Any
 from pathlib import Path
 import os
+import pandas as pd
+import numpy as np
 
 from ..utils.file_utils import ensure_dirs
 
