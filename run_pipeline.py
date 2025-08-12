@@ -133,6 +133,10 @@ def preprocess_invoice_data(df):
     """Preprocess the invoice data for analysis"""
     print("  - Cleaning and standardizing data...")
     
+    # Import required libraries
+    import numpy as np
+    import pandas as pd
+    
     # Remove unnamed columns
     df = df.loc[:, ~df.columns.str.contains("^Unnamed")]
     
@@ -167,6 +171,10 @@ def calculate_benchmarks(df):
     """Calculate 85% E/M and historical benchmarks"""
     print("  - Calculating 85% E/M benchmark...")
     
+    # Import required libraries
+    import numpy as np
+    import pandas as pd
+    
     # Add benchmark columns
     if "Charge Amount" in df.columns:
         df["Benchmark_85_Percent"] = df["Charge Amount"] * 0.85
@@ -185,6 +193,10 @@ def calculate_benchmarks(df):
 def generate_weekly_outputs(df):
     """Generate granular and aggregated weekly outputs"""
     print("  - Creating weekly granular outputs...")
+    
+    # Import required libraries
+    import numpy as np
+    import pandas as pd
     
     # Granular weekly (by CPT/benchmark key)
     if "Week" in df.columns:
@@ -309,6 +321,10 @@ def run_ml_diagnostics(df):
 def analyze_underpayment_drivers(df):
     """Analyze underpayment drivers by payer, key, and time"""
     print("  - Analyzing underpayment drivers...")
+    
+    # Import required libraries
+    import numpy as np
+    import pandas as pd
     
     drivers = {}
     
