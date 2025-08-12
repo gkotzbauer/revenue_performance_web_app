@@ -2,11 +2,17 @@
 from fastapi import APIRouter, Query, HTTPException
 from fastapi.responses import JSONResponse
 from typing import Optional, Dict, Any
+from pathlib import Path
 import os
 
-from ..utils.pipeline_utils import run_pipeline, LOG_DIR  # provided in utils
+from ..utils.pipeline_utils import run_pipeline  # provided in utils
 
 router = APIRouter(prefix="/api/pipeline", tags=["pipeline"])
+
+# Define constants locally since they're not in pipeline_utils
+PIPELINE_ROOT = Path(__file__).resolve().parents[2]  # repo root
+LOG_DIR = PIPELINE_ROOT / "logs"
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.post("/run", response_class=JSONResponse)

@@ -7,14 +7,18 @@ import shutil
 import os
 import time
 
-from ..utils.file_utils import ensure_dir, secure_filename  # provided in utils
-from ..utils.pipeline_utils import run_pipeline, PIPELINE_ROOT, LOG_DIR  # provided in utils
+from ..utils.file_utils import ensure_dirs, secure_filename  # provided in utils
+from ..utils.pipeline_utils import run_pipeline  # provided in utils
 
 router = APIRouter(prefix="/api/upload", tags=["upload"])
 
+# Define constants locally since they're not in pipeline_utils
+PIPELINE_ROOT = Path(__file__).resolve().parents[2]  # repo root
+LOG_DIR = PIPELINE_ROOT / "logs"
 UPLOAD_DIR = PIPELINE_ROOT / "data" / "uploads"
-ensure_dir(UPLOAD_DIR)
-ensure_dir(LOG_DIR)
+
+ensure_dirs()
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def _save_upload(file: UploadFile) -> Path:

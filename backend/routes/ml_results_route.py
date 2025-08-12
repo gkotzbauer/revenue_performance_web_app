@@ -1,19 +1,19 @@
 # backend/routes/ml_results_route.py
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from typing import Dict, Any, Optional, List
+from typing import List, Dict, Any
 from pathlib import Path
-import pandas as pd
-import numpy as np
+import os
 
-from ..utils.file_utils import ensure_dir
-from ..utils.pipeline_utils import PIPELINE_ROOT
+from ..utils.file_utils import ensure_dirs
 
-router = APIRouter(prefix="/api/ml", tags=["ml-results"])
+router = APIRouter(prefix="/api/ml-results", tags=["ml-results"])
 
-DATA_DIR = PIPELINE_ROOT / "data"
-OUTPUTS_DIR = DATA_DIR / "outputs"
-ensure_dir(OUTPUTS_DIR)
+# Define constants locally since they're not in pipeline_utils
+PIPELINE_ROOT = Path(__file__).resolve().parents[2]  # repo root
+OUTPUTS_DIR = PIPELINE_ROOT / "data" / "outputs"
+
+ensure_dirs()
 
 # Preferred order to read ML-enhanced aggregated outputs
 ML_CANDIDATE_PATTERNS = [

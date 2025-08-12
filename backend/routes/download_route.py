@@ -1,18 +1,19 @@
 # backend/routes/download_route.py
-from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import FileResponse, JSONResponse
-from typing import Dict, Any, List, Optional
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
+from typing import List, Dict, Any
 from pathlib import Path
-import mimetypes
 import os
 
-from ..utils.file_utils import ensure_dir, secure_filename
-from ..utils.pipeline_utils import PIPELINE_ROOT
+from ..utils.file_utils import ensure_dirs, secure_filename
 
 router = APIRouter(prefix="/api/download", tags=["download"])
 
-OUTPUT_DIR = PIPELINE_ROOT / "data" / "outputs"
-ensure_dir(OUTPUT_DIR)
+# Define constants locally since they're not in pipeline_utils
+PIPELINE_ROOT = Path(__file__).resolve().parents[2]  # repo root
+OUTPUTS_DIR = PIPELINE_ROOT / "data" / "outputs"
+
+ensure_dirs()
 
 
 def _resolve_output_path(name_or_relpath: str) -> Path:
@@ -27,13 +28,13 @@ def _resolve_output_path(name_or_relpath: str) -> Path:
     if rel.parent == Path("."):
         # Plain filename → sanitize
         safe_name = secure_filename(rel.name)
-        candidate = OUTPUT_DIR / safe_name
+        candidate = OUTPUTS_DIR / safe_name
     else:
         # Relative path → normalize & prevent traversal
-        candidate = (OUTPUT_DIR / rel).resolve()
+        candidate = (OUTPUTS_DIR / rel).resolve()
 
     # Security: must live under OUTPUT_DIR
-    if not str(candidate).startswith(str(OUTPUT_DIR.resolve())):
+    if not str(candidate).startswith(str(OUTPUTS_DIR.resolve())):
         raise HTTPException(status_code=400, detail="Invalid path")
 
     if not candidate.exists() or not candidate.is_file():
@@ -52,13 +53,13 @@ async def list_outputs(
     files: List[Dict[str, Any]] = []
 
     if recursive:
-        iterator = OUTPUT_DIR.rglob("*")
+        iterator = OUTPUTS_DIR.rglob("*")
     else:
-        iterator = OUTPUT_DIR.glob("*")
+        iterator = OUTPUTS_DIR.glob("*")
 
     for p in sorted(iterator):
         if p.is_file():
-            rel_path = p.relative_to(OUTPUT_DIR)
+            rel_path = p.relative_to(OUTPUTS_DIR)
             files.append({
                 "name": p.name,
                 "relpath": str(rel_path),
@@ -67,7 +68,7 @@ async def list_outputs(
                 "mime": mimetypes.guess_type(p.name)[0] or "application/octet-stream",
             })
 
-    return {"status": "ok", "root": str(OUTPUT_DIR), "files": files}
+    return {"status": "ok", "root": str(OUTPUTS_DIR), "files": files}
 
 
 @router.get("/file", response_class=FileResponse)

@@ -1,18 +1,22 @@
 # backend/routes/logs_route.py
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse, StreamingResponse
+from typing import List, Dict, Any
 from pathlib import Path
-from typing import Dict, Any
+import os
 import time
 
-from ..utils.pipeline_utils import PIPELINE_ROOT
-from ..utils.file_utils import ensure_dir
+from ..utils.file_utils import ensure_dirs
 
 router = APIRouter(prefix="/api/logs", tags=["logs"])
 
-LOGS_DIR = PIPELINE_ROOT / "logs"
-ensure_dir(LOGS_DIR)
-LOG_FILE = LOGS_DIR / "pipeline.log"
+# Define constants locally since they're not in pipeline_utils
+PIPELINE_ROOT = Path(__file__).resolve().parents[2]  # repo root
+LOG_DIR = PIPELINE_ROOT / "logs"
+LOG_FILE = LOG_DIR / "pipeline.log"
+
+ensure_dirs()
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.get("/latest", response_class=JSONResponse)
