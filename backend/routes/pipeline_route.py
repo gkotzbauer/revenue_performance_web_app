@@ -28,7 +28,9 @@ async def run_full_pipeline(
         env["START_AT"] = start_at
 
     try:
-        rc = run_pipeline("run_pipeline.py", env_override=env)
+        # run_pipeline expects a list of (label, script) tuples
+        scripts = [("Revenue Performance Pipeline", "run_pipeline.py")]
+        rc = run_pipeline(scripts, env_overrides=env)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Pipeline execution failed: {e}") from e
 
