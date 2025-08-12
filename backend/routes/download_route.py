@@ -1,9 +1,10 @@
 # backend/routes/download_route.py
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import FileResponse, JSONResponse
 from typing import List, Dict, Any
 from pathlib import Path
 import os
+import mimetypes
 
 from ..utils.file_utils import ensure_dirs, secure_filename
 
