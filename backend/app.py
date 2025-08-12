@@ -50,7 +50,12 @@ app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
 # Serve the React frontend build
 STATIC_DIR = Path(__file__).parent / "static"
 if STATIC_DIR.exists():
-    app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+    # Also serve index.html at root for SPA routing
+    @app.get("/")
+    async def serve_index():
+        from fastapi.responses import FileResponse
+        return FileResponse(str(STATIC_DIR / "index.html"))
 
 # ---------------------------------------
 # Routers
