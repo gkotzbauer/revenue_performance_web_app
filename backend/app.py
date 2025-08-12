@@ -1,9 +1,11 @@
 # backend/app.py
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pathlib import Path
 from fastapi.exceptions import HTTPException
+import os
 
 from .routes.upload_route import router as upload_router
 from .routes.pipeline_route import router as pipeline_router
@@ -48,32 +50,6 @@ OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 # Optional: serve outputs so downloads can be direct links
 app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
 
-# Serve the React frontend build
-STATIC_DIR = Path(__file__).parent / "static"
-if STATIC_DIR.exists():
-    # Custom static file handler that checks for API routes first
-    from fastapi.responses import FileResponse
-    from fastapi import Request
-    
-    @app.get("/{full_path:path}")
-    async def serve_static_or_fallback(full_path: str, request: Request):
-        # Skip API routes - let them be handled by the router
-        if full_path.startswith("api/"):
-            raise HTTPException(status_code=404, detail="API route not found")
-        
-        # Try to serve the requested file
-        file_path = STATIC_DIR / full_path
-        if file_path.exists() and file_path.is_file():
-            return FileResponse(str(file_path))
-        
-        # Fallback to index.html for SPA routing
-        return FileResponse(str(STATIC_DIR / "index.html"))
-    
-    # Serve index.html at root
-    @app.get("/")
-    async def serve_index():
-        return FileResponse(str(STATIC_DIR / "index.html"))
-
 # ---------------------------------------
 # Routers
 # ---------------------------------------
@@ -82,6 +58,37 @@ app.include_router(pipeline_router)
 app.include_router(download_router)
 app.include_router(logs_router)
 app.include_router(ml_router)
+
+# ---------------------------------------
+# Static file serving for React frontend
+# ---------------------------------------
+STATIC_DIR = Path(__file__).parent / "static"
+
+@app.middleware("http")
+async def static_files_middleware(request: Request, call_next):
+    # Skip API routes
+    if request.url.path.startswith("/api/"):
+        return await call_next(request)
+    
+    # Skip outputs route
+    if request.url.path.startswith("/outputs/"):
+        return await call_next(request)
+    
+    # Handle static files
+    if STATIC_DIR.exists():
+        # Try to serve the requested file
+        file_path = STATIC_DIR / request.url.path.lstrip("/")
+        if file_path.exists() and file_path.is_file():
+            return FileResponse(str(file_path))
+        
+        # For root or non-existent files, serve index.html for SPA routing
+        if request.url.path == "/" or not file_path.exists():
+            index_path = STATIC_DIR / "index.html"
+            if index_path.exists():
+                return FileResponse(str(index_path))
+    
+    # If no static file found, continue with normal request processing
+    return await call_next(request)
 
 # ---------------------------------------
 # Health
