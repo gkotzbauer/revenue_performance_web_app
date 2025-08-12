@@ -13,8 +13,14 @@ router = APIRouter(prefix="/api/pipeline", tags=["pipeline"])
 
 # Define constants locally since they're not in pipeline_utils
 PIPELINE_ROOT = Path(__file__).resolve().parents[2]  # repo root
+DATA_DIR = PIPELINE_ROOT / "data"
+UPLOADS_DIR = DATA_DIR / "uploads"
 LOG_DIR = PIPELINE_ROOT / "logs"
-OUTPUTS_DIR = PIPELINE_ROOT / "data" / "outputs"
+OUTPUTS_DIR = DATA_DIR / "outputs"
+
+# Create directories if they don't exist
+DATA_DIR.mkdir(parents=True, exist_ok=True)
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -37,6 +43,14 @@ async def run_full_pipeline(
         if not pipeline_script.exists():
             raise FileNotFoundError(f"Pipeline script not found: {pipeline_script}")
         
+        print(f"🚀 Starting pipeline execution...")
+        print(f"Pipeline script: {pipeline_script}")
+        print(f"Working directory: {PIPELINE_ROOT}")
+        print(f"DATA_DIR: {DATA_DIR}")
+        print(f"UPLOADS_DIR: {UPLOADS_DIR}")
+        print(f"OUTPUTS_DIR: {OUTPUTS_DIR}")
+        print(f"LOGS_DIR: {LOG_DIR}")
+        
         # Set environment variables for the pipeline
         env["DATA_DIR"] = str(DATA_DIR)
         env["UPLOADS_DIR"] = str(UPLOADS_DIR)
@@ -55,11 +69,15 @@ async def run_full_pipeline(
         rc = result.returncode
         
         # Log the output for debugging
+        print(f"Pipeline completed with return code: {rc}")
         print("Pipeline stdout:", result.stdout)
         if result.stderr:
             print("Pipeline stderr:", result.stderr)
             
     except Exception as e:
+        print(f"❌ Pipeline execution error: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Pipeline execution failed: {e}") from e
 
     return {
