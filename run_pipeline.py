@@ -133,7 +133,7 @@ def preprocess_invoice_data(df):
     """Preprocess the invoice data for analysis"""
     print("  - Cleaning and standardizing data...")
     
-    # Import required libraries
+    # Import required libraries (ensures numpy and pandas are available)
     import numpy as np
     import pandas as pd
     
