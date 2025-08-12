@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Upload from "./pages/Upload";
+import Downloads from "./pages/Downloads";
 import HelpGuide from "./components/HelpGuide";
 import "./App.css";
 
@@ -19,6 +20,9 @@ function App() {
               <Link to="/upload">Upload Data</Link>
             </li>
             <li>
+              <Link to="/downloads">Downloads</Link>
+            </li>
+            <li>
               <Link to="/help">Help / ML Guide</Link>
             </li>
           </ul>
@@ -29,6 +33,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/upload" element={<Upload />} />
+          <Route path="/downloads" element={<Downloads />} />
           <Route path="/help" element={<HelpGuide />} />
         </Routes>
       </main>

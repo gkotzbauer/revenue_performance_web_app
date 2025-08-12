@@ -50,9 +50,9 @@ const Upload = () => {
           if (outputsRes.ok) {
             const outputs = await outputsRes.json();
             if (outputs.files && outputs.files.length > 0) {
-              setUploadStatus(`✅ Pipeline completed! Generated ${outputs.files.length} output files. Check the Downloads section.`);
+              setUploadStatus(`✅ Pipeline completed! Generated ${outputs.files.length} output files. Check the Downloads page to view and download your results.`);
             } else {
-              setUploadStatus(`✅ Pipeline completed! No output files found yet. Check logs for details.`);
+              setUploadStatus(`✅ Pipeline completed! No output files found yet. Check the Downloads page for updates.`);
             }
           }
         } catch (err) {
